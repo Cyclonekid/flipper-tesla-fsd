@@ -107,6 +107,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -116,6 +117,9 @@ jobs:
           mkdir -p release
           find artifacts -name '*.fap' -exec cp {} release/ \;
           find artifacts -name '*.bin' -exec cp {} release/ \;
+          # Self-contained browser flasher — download it and open in Chrome/Edge
+          # to flash without hosting anything.
+          cp docs/install/index.html release/tesla-flasher.html
           ls -la release
       - name: Upload to release
         env:
