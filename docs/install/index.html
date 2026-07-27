@@ -111,15 +111,30 @@
             }]
           })));
       });
-      note.innerHTML = 'Installing firmware from <b>' + rel.tag_name + '</b>' +
-        (missing ? ' — ' + missing + ' board(s) have no image in this release.' : '.');
+      // Build with DOM APIs, never innerHTML: the tag name and any error text
+      // come from outside this file, so they are inserted as text and can never
+      // be parsed as markup.
+      var tag = document.createElement('b');
+      tag.textContent = rel.tag_name;
+      note.textContent = 'Installing firmware from ';
+      note.appendChild(tag);
+      note.appendChild(document.createTextNode(
+        missing ? ' — ' + missing + ' board(s) have no image in this release.' : '.'));
     })
     .catch(function (e) {
-      note.innerHTML = '<b style="color:#f85149">Could not look up the latest release (' +
-        e.message + ').</b> Check your internet connection and reload, or download the ' +
-        '<code>-merged.bin</code> for your board from the ' +
-        '<a href="https://github.com/' + REPO + '/releases">releases page</a> and flash it ' +
-        'with esptool at offset 0.';
+      var head = document.createElement('b');
+      head.style.color = '#f85149';
+      head.textContent = 'Could not look up the latest release (' + e.message + ').';
+      var link = document.createElement('a');
+      link.href = 'https://github.com/' + REPO + '/releases';
+      link.textContent = 'releases page';
+      note.textContent = '';
+      note.appendChild(head);
+      note.appendChild(document.createTextNode(
+        ' Check your internet connection and reload, or download the -merged.bin for ' +
+        'your board from the '));
+      note.appendChild(link);
+      note.appendChild(document.createTextNode(' and flash it with esptool at offset 0.'));
     });
 })();
 </script>
