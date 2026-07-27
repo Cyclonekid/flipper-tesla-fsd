@@ -1317,15 +1317,12 @@ static void process_frame(CanBusId bus, const CanFrame &frame) {
     // samples so 0x399 can be parsed for AP/NAG gating.
     static uint32_t hw_fallback_3fd_count = 0;
     static uint32_t hw_fallback_399_count = 0;
-    // A valid HW4 DAS_status (0x39B) is definitive HW4. Some taps carry both
-    // 0x399 and 0x39B; if the 0x399 fallback locked in HW3 first, a 0x39B frame
-    // must upgrade it — otherwise the HW4 DAS parser (with the byte0 latch) never
-    // runs and AP-state stays unread, so AP shows "Waiting" and NAG can't gate.
-    if (frame.id == CAN_ID_DAS_STATUS_HW4 && frame.dlc == CAN_FRAME_MAX_DATA_LEN &&
-        state_snapshot().hw_version == TeslaHW_HW3) {
-        apply_detected_hw(TeslaHW_HW4, "upgrade:HW3→HW4(0x39B seen)");
-        hw_fallback_399_count = 0;
-    }
+    // NOTE (#110/#122): beta.20 upgraded a locked-in HW3 guess to HW4 whenever a
+    // valid 0x39B appeared, to fix HW4 cars whose tap carries no 0x398. That
+    // regressed cars where the HW3 path was already working: switching to the HW4
+    // DAS parser left AP-state unread ("Waiting") and HW4-style injection produced
+    // TX errors. Reverted — detecting HW4 must not change a DAS-read/injection
+    // path that already works. See #110 for the reworked approach.
     if (state_snapshot().hw_version == TeslaHW_Unknown) {
         if (frame.id == CAN_ID_AP_LEGACY) {
             apply_detected_hw(TeslaHW_Legacy, "fallback:0x3EE");
