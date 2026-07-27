@@ -255,7 +255,7 @@ git clone https://github.com/hypery11/flipper-tesla-fsd.git applications_user/te
 
 [![Crypto](https://img.shields.io/badge/Crypto-Donate-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white)](https://fsd.fkey.id/) [![PayPal](https://img.shields.io/badge/PayPal-Donate-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=hypery11@gmail.com&item_name=Tesla+FSD+Open+Source+Research&currency_code=USD) [![GitHub Sponsors](https://img.shields.io/badge/Sponsor-hypery11-EA4AAA?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sponsors/hypery11)
 
-加密貨幣請至 **[fsd.fkey.id](https://fsd.fkey.id/)** — 同一個地址支援 Base、Ethereum、BSC、Arbitrum、Polygon、Gnosis、Optimism，也收 Bitcoin、Solana、Tron。
+加密貨幣請至 **[fsd.fkey.id](https://fsd.fkey.id/)** — 同一個地址、支援多鏈。實際可用的網路請直接開頁面查看。
 
 款項用於測試用的 Tesla 零件（待救援的封鎖 VIN、不同 MCU/硬體組合）、各種 ESP32 硬體，以及逆向新韌體版本所花的時間。
 

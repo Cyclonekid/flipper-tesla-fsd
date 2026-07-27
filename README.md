@@ -363,7 +363,7 @@ If this project saved you money on an aftermarket dongle, helped you understand 
 
 [![Crypto](https://img.shields.io/badge/Crypto-Donate-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white)](https://fsd.fkey.id/) [![PayPal](https://img.shields.io/badge/PayPal-Donate-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=hypery11@gmail.com&item_name=Tesla+FSD+Open+Source+Research&currency_code=USD) [![GitHub Sponsors](https://img.shields.io/badge/Sponsor-hypery11-EA4AAA?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sponsors/hypery11)
 
-Crypto goes to **[fsd.fkey.id](https://fsd.fkey.id/)** — one address across Base, Ethereum, BSC, Arbitrum, Polygon, Gnosis and Optimism, and it also takes Bitcoin, Solana and Tron.
+Crypto goes to **[fsd.fkey.id](https://fsd.fkey.id/)** — one address, multi-chain. Open the page to see the networks it currently accepts.
 
 Funds go toward Tesla parts for testing (banned VINs to recover, different MCU/HW combos), ESP32 hardware variants, and time spent reverse-engineering new firmware versions.
 

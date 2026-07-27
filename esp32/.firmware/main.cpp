@@ -562,6 +562,13 @@ static void debug_log_nag_decision(CanBusId bus,
 static void apply_detected_hw(TeslaHWVersion hw, const char *reason) {
     if (hw == TeslaHW_Unknown) return;
     state_enter();
+    // Manual HW selection wins (#110): once the owner has pinned a version,
+    // auto-detection must never move it — detection can only guess on taps that
+    // carry no 0x398, and overriding a deliberate choice is what breaks setups.
+    if (g_state.hw_override != TeslaHW_Unknown) {
+        state_exit();
+        return;
+    }
     if (g_state.hw_version == hw) {
         state_exit();
         return;
@@ -1507,6 +1514,14 @@ void setup() {
     g_state.blackbox_enabled      = BLACKBOX_DEFAULT_ENABLED;  // ON on LittleFS/SD, OFF on volatile RAM (#124)
 
     prefs_load(&g_state);
+    // Apply a saved manual HW selection immediately (#110) so the correct
+    // handlers are live from the first frame, without waiting on detection.
+    if (g_state.hw_override != TeslaHW_Unknown) {
+        fsd_apply_hw_version(&g_state, g_state.hw_override);
+        Serial.printf("[HW] Manual override: %s\n",
+                      (g_state.hw_override == TeslaHW_HW4)    ? "HW4" :
+                      (g_state.hw_override == TeslaHW_HW3)    ? "HW3" : "Legacy");
+    }
 #if defined(BOARD_TTGO_DISPLAY)
     display_set_enabled(g_state.display_enabled);
 #endif
