@@ -235,6 +235,7 @@ typedef struct FSDState {
     bool assist_hands_off;       // bit14: UI-level hands-on disable
     bool assist_dev_mode;        // bit5: UI_dasDeveloper flag
     bool assist_lhd_override;    // bit40-41: force left-hand drive
+    bool assist_rhd_override;    // bit41 UI_drivingSide = RHD; opt-in, default OFF; mutually exclusive with LHD override
 
     // --- 0x3FD mux1 extras ---
     bool assist_show_lane_graph; // bit45: lane visualization on non-FSD tier

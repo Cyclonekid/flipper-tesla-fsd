@@ -1585,6 +1585,29 @@ static void test_driver_assist(void) {
     CHECK(fsd_handle_driver_assist_override(&s, &f) == false, "assist no flags -> noop");
 }
 
+// ── 0x3F8 RHD driving-side override (#66) ─────────────────────────────────────
+static void test_rhd_override(void) {
+    FSDState s;
+    CANFRAME f;
+
+    // RHD on: bit41 set, bit40 clear
+    memset(&s, 0, sizeof(s));
+    zero(&f);
+    f.data_lenght = 8;
+    s.assist_rhd_override = true;
+    CHECK(fsd_handle_driver_assist_override(&s, &f), "rhd modifies");
+    CHECK((f.buffer[5] & 0x02) != 0, "rhd bit41 set");
+    CHECK((f.buffer[5] & 0x01) == 0, "rhd bit40 clear");
+
+    // RHD off: bit41 not set, no modification
+    memset(&s, 0, sizeof(s));
+    zero(&f);
+    f.data_lenght = 8;
+    s.assist_rhd_override = false;
+    CHECK(fsd_handle_driver_assist_override(&s, &f) == false, "rhd off -> noop");
+    CHECK((f.buffer[5] & 0x02) == 0, "rhd off bit41 clear");
+}
+
 // ── 0x7FF GTW Config Replay: learn -> arm -> replay ───────────────────────────
 static void test_gtw_shield(void) {
     FSDState s;
@@ -2025,6 +2048,7 @@ int main(void) {
     test_das_status_hw4_no_fallback();
     test_gtw_tier();
     test_driver_assist();
+    test_rhd_override();
     test_gtw_shield();
     test_scroll_press();
     test_misc_parsers();
