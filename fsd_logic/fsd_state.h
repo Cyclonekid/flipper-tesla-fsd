@@ -191,6 +191,13 @@ typedef struct FSDState {
     // bit19 (EU summon restriction) and sets bit47 (summon enable), on HW3 + HW4.
     // Opt-in, default OFF. // TODO: add Summon EU Unlock to Flipper menu
     bool summon_unlock;
+    // AP branch/tier selector (0x3FD DAS_autopilotControl mux1, UI_apmv3Branch,
+    // bits 40-42 = byte5 bits 0-2). Enum: 0=LIVE 1=STAGE 2=DEV 3=STAGE2 4=EAP
+    // 5=DEMO. Opt-in, default OFF (0xFF sentinel = don't touch). Experimental and
+    // non-persistent: writing this only changes which AP software branch/tier the
+    // UI presents while injection is live; it reverts the instant injection stops.
+    // Real-world effect is unverified.
+    uint8_t apmv3_branch;
     bool speed_profile_locked;   // when true, follow distance won't override profile
     uint8_t hw4_offset;          // HW4 mux=2 speed offset override (0 = no override)
 

@@ -511,6 +511,18 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
     <span class="lbl">Telemetry Off (experimental)<br><small style="color:var(--muted)">Experimental &amp; unverified — clears reachable telemetry flags only (not the Vehicle-bus ECU log-upload). Does NOT guarantee reduced detection.</small></span>
     <label class="sw"><input type="checkbox" id="swTelOff" onchange="cmd('assist_telemetry_off',this.checked)"><span class="sl2"></span></label>
   </div>
+  <div class="row">
+    <span class="lbl">AP Branch/Tier (experimental)<br><small style="color:var(--muted)">Experimental &amp; non-persistent — injects a UI branch/tier hint only, reverts when injection stops; unverified and may be a ban signal. Off by default.</small></span>
+    <select id="selApmv3" onchange="cmd('apmv3_branch',parseInt(this.value,10))">
+      <option value="255">Off</option>
+      <option value="0">Live</option>
+      <option value="1">Stage</option>
+      <option value="2">Dev</option>
+      <option value="3">Stage2</option>
+      <option value="4">EAP</option>
+      <option value="5">Demo</option>
+    </select>
+  </div>
   <div class="row" style="display:block">
     <div id="pmSuggest" style="display:none;margin:0 0 8px;padding:8px 10px;border:1px solid var(--accent);border-radius:6px;background:var(--card2)">
       <div style="font-size:12px;color:var(--text)">Looks like variant <b id="pmName">?</b> &mdash; the standard parser can't read AP-state on this bus.</div>
@@ -976,6 +988,8 @@ function upd(d){
   if(document.getElementById('swCog')) document.getElementById('swCog').checked=d.continue_on_green;
   if(document.getElementById('swRhd')) document.getElementById('swRhd').checked=d.assist_rhd_override;
   if(document.getElementById('swTelOff')) document.getElementById('swTelOff').checked=d.assist_telemetry_off;
+  var apmv3Sel=document.getElementById('selApmv3');
+  if(apmv3Sel && d.apmv3_branch!==undefined && document.activeElement!==apmv3Sel) apmv3Sel.value=String(d.apmv3_branch);
   if(document.getElementById('swDisp')) document.getElementById('swDisp').checked=!!d.display_enabled;
   if(document.activeElement.id!=='dispBr' && document.getElementById('dispBr'))
     document.getElementById('dispBr').value=d.display_brightness||50;
@@ -1565,6 +1579,7 @@ static String build_json() {
     j += "\"continue_on_green\":"; j += state.continue_on_green         ? "true" : "false"; j += ',';
     j += "\"assist_rhd_override\":"; j += state.assist_rhd_override      ? "true" : "false"; j += ',';
     j += "\"assist_telemetry_off\":"; j += state.assist_telemetry_off    ? "true" : "false"; j += ',';
+    j += "\"apmv3_branch\":";  j += (int)state.apmv3_branch;             j += ',';
     j += "\"firmware_14x_warning\":"; j += state.firmware_14x_warning  ? "true" : "false"; j += ',';
 #if defined(BOARD_TTGO_DISPLAY)
     j += "\"display_enabled\":"; j += state.display_enabled             ? "true" : "false"; j += ',';
@@ -2043,6 +2058,22 @@ static void ws_event(uint8_t num, WStype_t type,
             saved = *g_state;
             state_exit();
             Serial.printf("[Web] Telemetry Off: %s\n", enabled ? "ON" : "OFF");
+            prefs_save(&saved);
+        }
+    } else if (strstr(buf, "\"apmv3_branch\"")) {
+        // AP branch/tier selector (experimental, non-persistent): 0-5 select a
+        // UI_apmv3Branch value, any other value (255 = Off) stores the 0xFF
+        // sentinel so the handler leaves the frame untouched.
+        if (vptr) {
+            while (*vptr == ' ' || *vptr == ':') vptr++;
+            int sel = atoi(vptr);
+            uint8_t want = (sel >= 0 && sel <= 5) ? (uint8_t)sel : 0xFF;
+            FSDState saved;
+            state_enter();
+            g_state->apmv3_branch = want;
+            saved = *g_state;
+            state_exit();
+            Serial.printf("[Web] AP Branch/Tier: %d\n", want);
             prefs_save(&saved);
         }
     } else if (strstr(buf, "\"dump\"")) {
