@@ -242,8 +242,14 @@ typedef struct FSDState {
     bool assist_tlssc_bit38;     // bit38 on mux0: explicit TLSSC enable (complementary to 0x331)
     bool continue_on_green;      // bit39 on mux0 (UI_fsdContinueOnGreenWithCIPV): continue through a green light behind a lead car without stalk confirm; opt-in, default OFF, pairs with TLSSC/bit38
 
-    // --- telemetry disable (0x3F8 bit43) ---
-    bool assist_telemetry_off;   // force UI_enableTripTelemetry=0
+    // --- Telemetry Off (experimental, opt-in, default OFF) ---
+    // Clears the telemetry/logging flags this tool can REACH on the buses it taps:
+    //   0x3F8 UI_driverAssistControl bits 19/42/43/44/55 (clip/trip/road-segment)
+    //   0x3FD DAS_autopilotControl mux1 bits 48/50 (cabin-camera / China AP telemetry)
+    // These are plain bit-clears (no checksum). This is a REACHABLE SUBSET only —
+    // it does NOT touch Vehicle-bus ECU log-upload frames and does NOT guarantee
+    // reduced detection. See the omission notes in fsd_handler.c.
+    bool assist_telemetry_off;
 
     // --- energy consumption (0x33A, read-only) ---
     float energy_wh_per_km;
