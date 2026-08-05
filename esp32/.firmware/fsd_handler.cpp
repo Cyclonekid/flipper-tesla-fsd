@@ -47,6 +47,7 @@ void fsd_state_init(FSDState *state, TeslaHWVersion hw) {
     state->ignore_ota           = false;
     state->emergency_vehicle_detect = false;
     state->summon_unlock        = false;    // opt-in Summon EU Unlock, default OFF
+    state->apmv3_branch         = 0xFF;      // opt-in AP branch/tier selector, default OFF (0xFF sentinel)
     state->continue_on_green    = false;    // opt-in Continue on Green, default OFF
     state->assist_rhd_override  = false;    // opt-in RHD driving-side override, default OFF
     state->fsd_unlock           = false;
@@ -277,7 +278,8 @@ bool fsd_handle_autopilot_frame(FSDState *state, CanFrame *frame) {
             modified = true;
         }
         if (mux == CAN_MUX_1 &&
-            (state->nag_killer || state->summon_unlock || state->assist_telemetry_off)) {
+            (state->nag_killer || state->summon_unlock || state->assist_telemetry_off ||
+             state->apmv3_branch <= 5)) {
             if (state->nag_killer) {
                 // Nag suppression via bit 19 (clear = no hands-on-wheel request)
                 set_bit(frame, SIG_AP_NAG_CLEAR_BIT, false);
@@ -295,6 +297,12 @@ bool fsd_handle_autopilot_frame(FSDState *state, CanFrame *frame) {
             if (state->assist_telemetry_off) {
                 set_bit(frame, 48, false);
                 set_bit(frame, 50, false);
+                modified = true;
+            }
+            // AP branch/tier selector (experimental, non-persistent): UI_apmv3Branch
+            // bits 40-42 = byte5 bits 0-2. 0xFF sentinel = OFF (leave untouched).
+            if (state->apmv3_branch <= 5) {
+                frame->data[5] = (uint8_t)((frame->data[5] & ~0x07) | (state->apmv3_branch & 0x07));
                 modified = true;
             }
         }
@@ -321,7 +329,8 @@ bool fsd_handle_autopilot_frame(FSDState *state, CanFrame *frame) {
             modified = true;
         }
         if (mux == CAN_MUX_1 &&
-            (state->nag_killer || state->summon_unlock || state->assist_telemetry_off)) {
+            (state->nag_killer || state->summon_unlock || state->assist_telemetry_off ||
+             state->apmv3_branch <= 5)) {
             if (state->nag_killer) {
                 set_bit(frame, SIG_AP_NAG_CLEAR_BIT, false);      // clear hands-on-wheel nag
                 set_bit(frame, SIG_AP_HW4_NAG_CONFIRM_BIT, true); // HW4 nag-suppression confirmation bit
@@ -339,6 +348,12 @@ bool fsd_handle_autopilot_frame(FSDState *state, CanFrame *frame) {
             if (state->assist_telemetry_off) {
                 set_bit(frame, 48, false);
                 set_bit(frame, 50, false);
+                modified = true;
+            }
+            // AP branch/tier selector (experimental, non-persistent): UI_apmv3Branch
+            // bits 40-42 = byte5 bits 0-2. 0xFF sentinel = OFF (leave untouched).
+            if (state->apmv3_branch <= 5) {
+                frame->data[5] = (uint8_t)((frame->data[5] & ~0x07) | (state->apmv3_branch & 0x07));
                 modified = true;
             }
         }

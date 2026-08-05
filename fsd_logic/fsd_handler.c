@@ -18,6 +18,7 @@ void fsd_state_init(FSDState* state, TeslaHWVersion hw) {
     state->das_prev_hands_on_state = 0xFF; // escalation-edge baseline (#100)
     state->enhanced_autopilot = false;
     state->summon_unlock = false;   // opt-in Summon EU Unlock, default OFF
+    state->apmv3_branch = 0xFF;     // opt-in AP branch/tier selector, default OFF (0xFF sentinel)
     state->continue_on_green = false; // opt-in Continue on Green, default OFF
     state->assist_rhd_override = false; // opt-in RHD driving-side override, default OFF
     state->speed_profile_locked = false;
@@ -255,6 +256,11 @@ bool fsd_handle_autopilot_frame(FSDState* state, CANFRAME* frame, uint32_t now_m
             if(state->assist_show_lane_graph) {
                 fsd_set_bit(frame, 45, true);
             }
+            // AP branch/tier selector (experimental, non-persistent): UI_apmv3Branch
+            // bits 40-42 = byte5 bits 0-2. 0xFF sentinel = OFF (leave untouched).
+            if(state->apmv3_branch <= 5) {
+                frame->buffer[5] = (uint8_t)((frame->buffer[5] & ~0x07) | (state->apmv3_branch & 0x07));
+            }
             state->nag_suppressed = true;
             modified = true;
         }
@@ -294,6 +300,11 @@ bool fsd_handle_autopilot_frame(FSDState* state, CANFRAME* frame, uint32_t now_m
             }
             if(state->assist_show_lane_graph) {
                 fsd_set_bit(frame, 45, true);
+            }
+            // AP branch/tier selector (experimental, non-persistent): UI_apmv3Branch
+            // bits 40-42 = byte5 bits 0-2. 0xFF sentinel = OFF (leave untouched).
+            if(state->apmv3_branch <= 5) {
+                frame->buffer[5] = (uint8_t)((frame->buffer[5] & ~0x07) | (state->apmv3_branch & 0x07));
             }
             state->nag_suppressed = true;
             modified = true;

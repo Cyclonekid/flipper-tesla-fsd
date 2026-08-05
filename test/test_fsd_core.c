@@ -1668,6 +1668,59 @@ static void test_telemetry_off(void) {
     CHECK((f.buffer[6] & 0x04) != 0, "0x3FD bit50 untouched when off");
 }
 
+// ── AP branch/tier selector (0x3FD mux1 UI_apmv3Branch, bits 40-42) ──────────
+// Experimental, opt-in, non-persistent. 0xFF sentinel = OFF (frame untouched);
+// 0-5 write the branch/tier into byte5 bits 0-2.
+static void test_apmv3_branch(void) {
+    FSDState s;
+    CANFRAME f;
+
+    // HW4 mux1: apmv3_branch=4 (EAP) -> byte5 bits0-2 == 4.
+    memset(&s, 0, sizeof(s));
+    s.hw_version = TeslaHW_HW4;
+    s.apmv3_branch = 4;
+    zero(&f);
+    f.data_lenght = 8;
+    f.buffer[0] = 1; // mux1
+    CHECK(fsd_handle_autopilot_frame(&s, &f, 0), "HW4 mux1 apmv3 modifies");
+    CHECK((f.buffer[5] & 0x07) == 4, "HW4 mux1 apmv3=EAP byte5[0:2]=%u exp 4",
+          f.buffer[5] & 0x07);
+
+    // HW3 mux1: apmv3_branch=4 (EAP) -> byte5 bits0-2 == 4.
+    memset(&s, 0, sizeof(s));
+    s.hw_version = TeslaHW_HW3;
+    s.apmv3_branch = 4;
+    zero(&f);
+    f.data_lenght = 8;
+    f.buffer[0] = 1; // mux1
+    CHECK(fsd_handle_autopilot_frame(&s, &f, 0), "HW3 mux1 apmv3 modifies");
+    CHECK((f.buffer[5] & 0x07) == 4, "HW3 mux1 apmv3=EAP byte5[0:2]=%u exp 4",
+          f.buffer[5] & 0x07);
+
+    // OFF (0xFF sentinel): byte5 bits0-2 left untouched (preset 0x05 preserved).
+    memset(&s, 0, sizeof(s));
+    s.hw_version = TeslaHW_HW4;
+    s.apmv3_branch = 0xFF;
+    zero(&f);
+    f.data_lenght = 8;
+    f.buffer[0] = 1; // mux1
+    f.buffer[5] = 0x05; // preset low 3 bits to prove they survive
+    fsd_handle_autopilot_frame(&s, &f, 0);
+    CHECK((f.buffer[5] & 0x07) == 0x05, "HW4 mux1 apmv3 OFF leaves byte5[0:2]=%u exp 5",
+          f.buffer[5] & 0x07);
+
+    memset(&s, 0, sizeof(s));
+    s.hw_version = TeslaHW_HW3;
+    s.apmv3_branch = 0xFF;
+    zero(&f);
+    f.data_lenght = 8;
+    f.buffer[0] = 1; // mux1
+    f.buffer[5] = 0x05;
+    fsd_handle_autopilot_frame(&s, &f, 0);
+    CHECK((f.buffer[5] & 0x07) == 0x05, "HW3 mux1 apmv3 OFF leaves byte5[0:2]=%u exp 5",
+          f.buffer[5] & 0x07);
+}
+
 // ── 0x7FF GTW Config Replay: learn -> arm -> replay ───────────────────────────
 static void test_gtw_shield(void) {
     FSDState s;
@@ -2110,6 +2163,7 @@ int main(void) {
     test_driver_assist();
     test_rhd_override();
     test_telemetry_off();
+    test_apmv3_branch();
     test_gtw_shield();
     test_scroll_press();
     test_misc_parsers();
