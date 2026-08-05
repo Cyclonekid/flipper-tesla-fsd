@@ -48,6 +48,7 @@ void fsd_state_init(FSDState *state, TeslaHWVersion hw) {
     state->emergency_vehicle_detect = false;
     state->summon_unlock        = false;    // opt-in Summon EU Unlock, default OFF
     state->continue_on_green    = false;    // opt-in Continue on Green, default OFF
+    state->assist_rhd_override  = false;    // opt-in RHD driving-side override, default OFF
     state->fsd_unlock           = false;
     state->force_fsd            = false;
     state->china_mode           = false;
@@ -187,6 +188,22 @@ void fsd_handle_follow_distance(FSDState *state, const CanFrame *frame) {
             default: break;
         }
     }
+}
+
+// ── Driver-assist override (UI_driverAssistControl 0x3F8) ────────────────────
+// Opt-in Right-Hand-Drive: set UI_drivingSide = RHD (bit41=1, bit40=0). #66.
+// Source: ev-open-can-tools RHD.json (frame 1016, bit41=1).
+
+bool fsd_handle_driver_assist_override(FSDState *state, CanFrame *frame) {
+    if (frame->dlc < 8) return false;
+    bool modified = false;
+    // bit40-41: UI_drivingSide = 2 (RHD)
+    if (state->assist_rhd_override) {
+        set_bit(frame, 40, false);
+        set_bit(frame, 41, true);
+        modified = true;
+    }
+    return modified;
 }
 
 // ── HW3/HW4 autopilot control (DAS_autopilotControl 0x3FD) ───────────────────

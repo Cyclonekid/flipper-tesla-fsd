@@ -19,6 +19,7 @@ void fsd_state_init(FSDState* state, TeslaHWVersion hw) {
     state->enhanced_autopilot = false;
     state->summon_unlock = false;   // opt-in Summon EU Unlock, default OFF
     state->continue_on_green = false; // opt-in Continue on Green, default OFF
+    state->assist_rhd_override = false; // opt-in RHD driving-side override, default OFF
     state->speed_profile_locked = false;
     state->hw4_offset = 0;
 }
@@ -702,6 +703,12 @@ bool fsd_handle_driver_assist_override(FSDState* state, CANFRAME* frame) {
     if(state->assist_lhd_override) {
         fsd_set_bit(frame, 40, true);
         fsd_set_bit(frame, 41, false);
+        modified = true;
+    }
+    // bit40-41: UI_drivingSide = 2 (RHD) — mutually exclusive with LHD above
+    if(state->assist_rhd_override) {
+        fsd_set_bit(frame, 40, false);
+        fsd_set_bit(frame, 41, true);
         modified = true;
     }
     // bit43: UI_enableTripTelemetry = 0 (disable trip data collection)
