@@ -187,6 +187,10 @@ typedef struct FSDState {
 
     // --- upstream feature flags ---
     bool enhanced_autopilot;     // when true, mux=1 also sets bit46 (EAP/summon)
+    // Summon EU Unlock (ev-open-can-tools summon-eu-unlock): 0x3FD mux1 clears
+    // bit19 (EU summon restriction) and sets bit47 (summon enable), on HW3 + HW4.
+    // Opt-in, default OFF. // TODO: add Summon EU Unlock to Flipper menu
+    bool summon_unlock;
     bool speed_profile_locked;   // when true, follow distance won't override profile
     uint8_t hw4_offset;          // HW4 mux=2 speed offset override (0 = no override)
 
