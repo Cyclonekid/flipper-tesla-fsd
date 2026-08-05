@@ -203,6 +203,32 @@ bool fsd_handle_driver_assist_override(FSDState *state, CanFrame *frame) {
         set_bit(frame, 41, true);
         modified = true;
     }
+    // Telemetry Off (experimental) — clear the reachable UI_driverAssistControl
+    // telemetry-enable flags on 0x3F8. Plain bit-clears, no checksum on this frame.
+    //   bit19 UI_enableClipParkedTelemetry
+    //   bit42 UI_enableClipTelemetry
+    //   bit43 UI_enableTripTelemetry
+    //   bit44 UI_enableRoadSegmentTelemetry
+    //   bit55 UI_enableClipStartStopTelemetry
+    // Source: ev-open-can-tools disable-telemetry.json (GPL-3.0).
+    //
+    // DELIBERATELY OUT OF SCOPE (documented so coverage is honest):
+    //   * 0x389 DAS_status2 bits 13/34/35 — clearing them requires recomputing the
+    //     frame counter (byte6 mask 0xF0) + Tesla checksum; deferred to avoid emitting
+    //     invalid frames.
+    //   * 0x3B3 VCSEC and the ~11 *_alertMatrix *_a030_ECULogUploadRequest frames
+    //     (0x340/341/342/360/3BA/3C0/3C8/3CD/3CE/3CF) — on the Vehicle CAN bus, which
+    //     this tool does not reliably tap; injecting them on a Chassis/Party tap does
+    //     nothing. Reaching them needs Vehicle-bus access first.
+    // REACHABLE SUBSET only — does NOT guarantee reduced detection.
+    if (state->assist_telemetry_off) {
+        set_bit(frame, 19, false);
+        set_bit(frame, 42, false);
+        set_bit(frame, 43, false);
+        set_bit(frame, 44, false);
+        set_bit(frame, 55, false);
+        modified = true;
+    }
     return modified;
 }
 
@@ -250,7 +276,8 @@ bool fsd_handle_autopilot_frame(FSDState *state, CanFrame *frame) {
                           SIG_AP_SPEED_PROFILE_SHIFT);
             modified = true;
         }
-        if (mux == CAN_MUX_1 && (state->nag_killer || state->summon_unlock)) {
+        if (mux == CAN_MUX_1 &&
+            (state->nag_killer || state->summon_unlock || state->assist_telemetry_off)) {
             if (state->nag_killer) {
                 // Nag suppression via bit 19 (clear = no hands-on-wheel request)
                 set_bit(frame, SIG_AP_NAG_CLEAR_BIT, false);
@@ -260,6 +287,14 @@ bool fsd_handle_autopilot_frame(FSDState *state, CanFrame *frame) {
             if (state->summon_unlock) {
                 set_bit(frame, SIG_AP_NAG_CLEAR_BIT, false);       // bit19 EU restriction clear
                 set_bit(frame, SIG_AP_HW4_NAG_CONFIRM_BIT, true);  // bit47 summon enable
+                modified = true;
+            }
+            // Telemetry Off (experimental): clear reachable DAS_autopilotControl mux1
+            // telemetry flags — bit48 UI_enableCabinCameraTelemetry, bit50
+            // UI_autopilotTelemetryInChina. Plain bit-clears, no checksum.
+            if (state->assist_telemetry_off) {
+                set_bit(frame, 48, false);
+                set_bit(frame, 50, false);
                 modified = true;
             }
         }
@@ -285,7 +320,8 @@ bool fsd_handle_autopilot_frame(FSDState *state, CanFrame *frame) {
                 set_bit(frame, SIG_AP_HW4_EMERGENCY_VEHICLE_BIT, true);
             modified = true;
         }
-        if (mux == CAN_MUX_1 && (state->nag_killer || state->summon_unlock)) {
+        if (mux == CAN_MUX_1 &&
+            (state->nag_killer || state->summon_unlock || state->assist_telemetry_off)) {
             if (state->nag_killer) {
                 set_bit(frame, SIG_AP_NAG_CLEAR_BIT, false);      // clear hands-on-wheel nag
                 set_bit(frame, SIG_AP_HW4_NAG_CONFIRM_BIT, true); // HW4 nag-suppression confirmation bit
@@ -295,6 +331,14 @@ bool fsd_handle_autopilot_frame(FSDState *state, CanFrame *frame) {
             if (state->summon_unlock) {
                 set_bit(frame, SIG_AP_NAG_CLEAR_BIT, false);       // bit19 EU restriction clear
                 set_bit(frame, SIG_AP_HW4_NAG_CONFIRM_BIT, true);  // bit47 summon enable
+                modified = true;
+            }
+            // Telemetry Off (experimental): clear reachable DAS_autopilotControl mux1
+            // telemetry flags — bit48 UI_enableCabinCameraTelemetry, bit50
+            // UI_autopilotTelemetryInChina. Plain bit-clears, no checksum.
+            if (state->assist_telemetry_off) {
+                set_bit(frame, 48, false);
+                set_bit(frame, 50, false);
                 modified = true;
             }
         }

@@ -1608,6 +1608,66 @@ static void test_rhd_override(void) {
     CHECK((f.buffer[5] & 0x02) == 0, "rhd off bit41 clear");
 }
 
+// ── Telemetry Off (experimental): reachable 0x3F8 + 0x3FD mux1 flag clears ─────
+// 0x3F8 UI_driverAssistControl clears bits 19/42/43/44/55; 0x3FD mux1 clears
+// bits 48/50. Plain bit-clears, no checksum. With the toggle off, none move.
+static void test_telemetry_off(void) {
+    FSDState s;
+    CANFRAME f;
+
+    // 0x3F8: with telemetry-off ON, bits 19/42/43/44/55 are cleared.
+    memset(&s, 0, sizeof(s));
+    zero(&f);
+    f.data_lenght = 8;
+    f.buffer[2] = 0x08;         // bit19 preset
+    f.buffer[5] = 0x04 | 0x08 | 0x10; // bits 42/43/44 preset
+    f.buffer[6] = 0x80;         // bit55 preset
+    s.assist_telemetry_off = true;
+    CHECK(fsd_handle_driver_assist_override(&s, &f), "0x3F8 telemetry-off modifies");
+    CHECK((f.buffer[2] & 0x08) == 0, "0x3F8 bit19 cleared");
+    CHECK((f.buffer[5] & 0x04) == 0, "0x3F8 bit42 cleared");
+    CHECK((f.buffer[5] & 0x08) == 0, "0x3F8 bit43 cleared");
+    CHECK((f.buffer[5] & 0x10) == 0, "0x3F8 bit44 cleared");
+    CHECK((f.buffer[6] & 0x80) == 0, "0x3F8 bit55 cleared");
+
+    // 0x3F8: with telemetry-off OFF, those bits are untouched.
+    memset(&s, 0, sizeof(s));
+    zero(&f);
+    f.data_lenght = 8;
+    f.buffer[2] = 0x08;
+    f.buffer[5] = 0x04 | 0x08 | 0x10;
+    f.buffer[6] = 0x80;
+    s.assist_telemetry_off = false;
+    fsd_handle_driver_assist_override(&s, &f);
+    CHECK((f.buffer[2] & 0x08) != 0, "0x3F8 bit19 untouched when off");
+    CHECK((f.buffer[5] & 0x1C) == 0x1C, "0x3F8 bits42/43/44 untouched when off");
+    CHECK((f.buffer[6] & 0x80) != 0, "0x3F8 bit55 untouched when off");
+
+    // 0x3FD mux1: with telemetry-off ON, bits 48/50 are cleared.
+    memset(&s, 0, sizeof(s));
+    s.hw_version = TeslaHW_HW3;
+    zero(&f);
+    f.data_lenght = 8;
+    f.buffer[0] = 1;            // mux1
+    f.buffer[6] = 0x01 | 0x04; // bits 48/50 preset
+    s.assist_telemetry_off = true;
+    CHECK(fsd_handle_autopilot_frame(&s, &f, 0), "0x3FD mux1 telemetry-off modifies");
+    CHECK((f.buffer[6] & 0x01) == 0, "0x3FD bit48 cleared");
+    CHECK((f.buffer[6] & 0x04) == 0, "0x3FD bit50 cleared");
+
+    // 0x3FD mux1: with telemetry-off OFF, bits 48/50 are untouched.
+    memset(&s, 0, sizeof(s));
+    s.hw_version = TeslaHW_HW3;
+    zero(&f);
+    f.data_lenght = 8;
+    f.buffer[0] = 1;
+    f.buffer[6] = 0x01 | 0x04;
+    s.assist_telemetry_off = false;
+    fsd_handle_autopilot_frame(&s, &f, 0);
+    CHECK((f.buffer[6] & 0x01) != 0, "0x3FD bit48 untouched when off");
+    CHECK((f.buffer[6] & 0x04) != 0, "0x3FD bit50 untouched when off");
+}
+
 // ── 0x7FF GTW Config Replay: learn -> arm -> replay ───────────────────────────
 static void test_gtw_shield(void) {
     FSDState s;
@@ -2049,6 +2109,7 @@ int main(void) {
     test_gtw_tier();
     test_driver_assist();
     test_rhd_override();
+    test_telemetry_off();
     test_gtw_shield();
     test_scroll_press();
     test_misc_parsers();
