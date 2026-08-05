@@ -170,26 +170,18 @@ The built-in ST7789 display is enabled by default and can be toggled from the We
 
 ### LilyGO-T2CAN
 
-LILYGO's physical connector names are easy to confuse with this project's can0/1. use the mapping below:
+LILYGO's physical connector names are easy to confuse with this project's `can0`/`can1`, so use the mapping below. What matters is the vehicle network a function acts on (by CAN ID), not just the firmware controller name.
 
-| Firmware can | Vehicle network where the function takes effect | X179 pins | CAN IDs / functions |
+| Firmware bus | Vehicle network | X179 pins | CAN IDs / functions |
 |---|---|---|---|
-| `can0` / TWAI | CH CAN | PIN `13 / 14` | All CAN1 functions |
-| `can1` / MCP2515 | PT CAN | PIN `2 / 3` | Nag-Killer A torque target: `0x370` |
-| `can1` / MCP2515 | BODY CAN | PIN `9 / 10` | Scroll/stalk/light/preheat/service functions: `0x3C2`, `0x229`, `0x249`, `0x273`, `0x082`, `0x339` |
+| `can0` / TWAI | Chassis CAN | `13 / 14` | Primary AP/DAS control; the `0x082` precondition is transmitted here |
+| `can1` / MCP2515 | Party CAN | `2 / 3` | Nag-Killer A torque target: `0x370` |
+| `can1` / MCP2515 | Vehicle CAN | `9 / 10` | Scroll/stalk/light/preheat/service: `0x3C2`, `0x229`, `0x249`, `0x273`, `0x339` |
 
 > [!IMPORTANT]
-> official LILYGO T-2CAN V1.0 names physical `CANA` as MCP2515/SPI and physical `CANB` as native TWAI.
+> The official LILYGO T-2CAN V1.0 labels physical `CANA` as MCP2515/SPI and physical `CANB` as native TWAI.
 
-Vehicle-side CAN binding must be documented by the CAN ID/function, not only by the firmware controller name:
-
-| Firmware bus | Vehicle network where the function takes effect | X179 pins | CAN IDs / functions |
-|---|---|---|---|
-| `can0` / TWAI | CH CAN | PIN `13 / 14` | All CAN1 functions |
-| `can1` / MCP2515 | PT CAN | PIN `2 / 3` | Nag-Killer A torque target: `0x370` |
-| `can1` / MCP2515 | BODY CAN | PIN `9 / 10` | Scroll/stalk/light/preheat/service functions: `0x3C2`, `0x229`, `0x249`, `0x273`, `0x082`, `0x339` |
-
-`can1` is one MCP2515 physical channel. It can be wired to PT CAN or BODY CAN for a test/install, but one MCP2515 channel cannot be on both vehicle networks at the same time.
+`can1` is one MCP2515 physical channel. It can be wired to Party CAN or Vehicle CAN for a given test/install, but one MCP2515 channel cannot be on both vehicle networks at the same time.
 
 ### OBD-II (Primary — Plug & Play)
 
