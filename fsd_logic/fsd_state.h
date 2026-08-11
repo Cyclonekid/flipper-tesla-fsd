@@ -76,8 +76,8 @@ typedef struct FSDState {
     // opt-in only — not gated on trim or the read-back track_mode_state, because
     // the enable request works on non-Performance trims too.
     bool track_mode_inject;      // master opt-in, default OFF
-    uint8_t track_rotation_pct;  // Handling Balance 0-100 (low=understeer/stable, high=oversteer/rotation); default 50
-    uint8_t track_stability_pct; // Stability Assist 0-100; default 100 (full stability = safest)
+    uint8_t track_rotation_pct;  // Handling Balance 0-100 (low=understeer/stable, high=oversteer/rotation); default 100 (rear-biased / RWD-like)
+    uint8_t track_stability_pct; // Stability Assist 0-100; default 30 (safety margin + fun)
     bool track_post_cooling;     // UI_trackPostCooling, default false
     bool track_cmp_overclock;    // UI_trackCmpOverclock (max cooling), default false
 

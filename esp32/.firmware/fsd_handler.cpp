@@ -51,8 +51,8 @@ void fsd_state_init(FSDState *state, TeslaHWVersion hw) {
     state->continue_on_green    = false;    // opt-in Continue on Green, default OFF
     state->assist_rhd_override  = false;    // opt-in RHD driving-side override, default OFF
     state->track_mode_inject    = false;    // Track Mode inject master opt-in, default OFF
-    state->track_rotation_pct   = 50;       // neutral handling balance
-    state->track_stability_pct  = 100;      // full stability = safest default
+    state->track_rotation_pct   = 100;      // full rotation = rear-biased / RWD-like
+    state->track_stability_pct  = 30;       // 30% keeps a safety margin but lets it move
     state->track_post_cooling   = false;
     state->track_cmp_overclock  = false;
     state->fsd_unlock           = false;

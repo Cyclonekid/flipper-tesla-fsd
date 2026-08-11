@@ -525,15 +525,15 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
   </div>
   <div class="row" style="display:block">
     <div style="display:flex;align-items:center;justify-content:space-between">
-      <span class="lbl">Track Mode (experimental)<br><small style="color:var(--muted)">Experimental &mdash; Vehicle-bus / Track-capable cars; not car-validated. Stability 100% = stock.</small></span>
+      <span class="lbl">Track Mode (experimental)<br><small style="color:var(--muted)">Experimental &mdash; Vehicle-bus; not car-validated. Defaults to rear-biased (rotation 100) + 30% stability &mdash; fun with a safety margin. Raise stability for stock feel.</small></span>
       <label class="sw"><input type="checkbox" id="swTrkMode" onchange="cmd('track_mode_inject',this.checked)"><span class="sl2"></span></label>
     </div>
     <div style="margin-top:8px">
-      <label style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>Handling Balance <small>(stable &rarr; rotation)</small></span><span id="trkRotV">50</span></label>
+      <label style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>Handling Balance <small>(stable &rarr; rotation)</small></span><span id="trkRotV">100</span></label>
       <input type="range" id="trkRot" min="0" max="100" style="width:100%" oninput="document.getElementById('trkRotV').textContent=this.value" onchange="cmd('track_rotation_pct',parseInt(this.value,10))">
     </div>
     <div style="margin-top:6px">
-      <label style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>Stability Assist</span><span id="trkStabV">100</span></label>
+      <label style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>Stability Assist</span><span id="trkStabV">30</span></label>
       <input type="range" id="trkStab" min="0" max="100" style="width:100%" oninput="document.getElementById('trkStabV').textContent=this.value" onchange="cmd('track_stability_pct',parseInt(this.value,10))">
     </div>
     <div class="row" style="padding:6px 0 0">

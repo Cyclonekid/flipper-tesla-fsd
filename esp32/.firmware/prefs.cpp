@@ -38,8 +38,8 @@ void prefs_load(FSDState *state) {
     state->firmware_14x_warning     = g_prefs.getBool("14x",    true);
     state->blackbox_enabled         = g_prefs.getBool("bbx",    BLACKBOX_DEFAULT_ENABLED);
     state->track_mode_inject        = g_prefs.getBool("tmInj",  false);
-    state->track_rotation_pct       = g_prefs.getUChar("tmRot", 50);
-    state->track_stability_pct      = g_prefs.getUChar("tmStab",100);
+    state->track_rotation_pct       = g_prefs.getUChar("tmRot", 100);
+    state->track_stability_pct      = g_prefs.getUChar("tmStab", 30);
     state->track_post_cooling       = g_prefs.getBool("tmPC",   false);
     state->track_cmp_overclock      = g_prefs.getBool("tmCO",   false);
 #if defined(BOARD_TTGO_DISPLAY)
