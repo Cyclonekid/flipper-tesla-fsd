@@ -317,6 +317,60 @@ static void test_continue_on_green(void) {
     CHECK((f.buffer[4] & 0x80) == 0, "HW4 mux0 cog-off bit39 NOT set");
 }
 
+// ── TLSSC bit38 (0x3FD mux0) — opt-in, HW3 + HW4 ─────────────────────────────
+// Explicit TLSSC enable on mux0. Gated by assist_tlssc_bit38 + fsd_enabled,
+// applies before the HW split so behavior must match on HW3/HW4.
+// bit38 -> byte4 bit6 -> mask 0x40.
+static void test_tlssc_bit38(void) {
+    CANFRAME f;
+
+    // ── HW3 ──
+    FSDState h3;
+    memset(&h3, 0, sizeof(h3));
+    h3.hw_version = TeslaHW_HW3;
+    h3.force_fsd = true;        // makes mux0 select FSD -> fsd_enabled = true
+
+    // ON: bit38 set on mux0.
+    h3.assist_tlssc_bit38 = true;
+    zero(&f);
+    f.data_lenght = 8;
+    f.buffer[0] = 0;            // mux0
+    CHECK(fsd_handle_autopilot_frame(&h3, &f, 0), "HW3 mux0 tlssc38-on reports modified");
+    CHECK(h3.fsd_enabled, "HW3 mux0 sets fsd_enabled");
+    CHECK((f.buffer[4] & 0x40) != 0, "HW3 mux0 tlssc38-on bit38 set");
+
+    // OFF: bit38 NOT set.
+    h3.assist_tlssc_bit38 = false;
+    zero(&f);
+    f.data_lenght = 8;
+    f.buffer[0] = 0;
+    fsd_handle_autopilot_frame(&h3, &f, 0);
+    CHECK((f.buffer[4] & 0x40) == 0, "HW3 mux0 tlssc38-off bit38 NOT set");
+
+    // ── HW4 ──
+    FSDState h4;
+    memset(&h4, 0, sizeof(h4));
+    h4.hw_version = TeslaHW_HW4;
+    h4.force_fsd = true;
+
+    // ON: bit38 set on mux0.
+    h4.assist_tlssc_bit38 = true;
+    zero(&f);
+    f.data_lenght = 8;
+    f.buffer[0] = 0;
+    CHECK(fsd_handle_autopilot_frame(&h4, &f, 0), "HW4 mux0 tlssc38-on reports modified");
+    CHECK(h4.fsd_enabled, "HW4 mux0 sets fsd_enabled");
+    CHECK((f.buffer[4] & 0x40) != 0, "HW4 mux0 tlssc38-on bit38 set");
+
+    // OFF: bit38 NOT set.
+    h4.assist_tlssc_bit38 = false;
+    zero(&f);
+    f.data_lenght = 8;
+    f.buffer[0] = 0;
+    fsd_handle_autopilot_frame(&h4, &f, 0);
+    CHECK((f.buffer[4] & 0x40) == 0, "HW4 mux0 tlssc38-off bit38 NOT set");
+}
+
 // ── 0x399 ISA speed chime: bit + Tesla additive checksum ──────────────────────
 static void test_isa_checksum(void) {
     CANFRAME f;
@@ -2173,6 +2227,7 @@ int main(void) {
     test_autopilot_hw3();
     test_summon_unlock();
     test_continue_on_green();
+    test_tlssc_bit38();
     test_isa_checksum();
     test_di_speed();
     test_tlssc_restore();
